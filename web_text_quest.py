@@ -2,92 +2,121 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Хранилище состояния квеста
+# Хранилище состояния
 session_state = {}
-
-# Отладочный вывод для логов
-import os
-print(f"Server starting on PORT: {os.getenv('PORT', 'not set')}")
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    user_id = request.remote_addr
+    if user_id not in session_state:
+        session_state[user_id] = {"step": 1}
+
+    state = session_state[user_id]
+
     if request.method == 'POST':
         choice = request.form.get('choice')
-        user_id = request.remote_addr
-
-        if user_id not in session_state:
-            session_state[user_id] = {"step": 1, "inventory": []}
-
-        state = session_state[user_id]
 
         if state["step"] == 1:
+            if choice in ["window", "radio"]:
+                return render_template_string("""
+                    <style>body { background-color: black; color: white; }</style>
+                    <h1>Текст-квест: InSide</h1>
+                    <p>Вы нарушили правила «InSide». Что-то зловещее поджидало вас... Игра окончена.</p>
+                    <p><a href="/">Начать заново</a></p>
+                """)
+            elif choice == "message":
+                state["step"] = 2
+                return render_template_string("""
+                    <style>body { background-color: black; color: white; }</style>
+                    <h1>Текст-квест: InSide</h1>
+                    <p>Вы посмотрели на загоревшийся экран телефона. Имя было вам знакомо — Уильям, ваш друг. Вы знали друг друга так давно, что, кажется, время и обстоятельства были не властны над вами.</p>
+                    <p>Уильям: Хэй, Марго... Как ты? В последнее время ты звучишь так измучено.</p>
+                    <form method="post">
+                        <button name="choice" value="a">А) Всё в порядке. Просто мигрени.</button>
+                        <button name="choice" value="b">Б) Я ощущаю, что за мной кто-то следит...</button>
+                    </form>
+                """)
+
+        elif state["step"] == 2:
+            if choice == "a":
+                state["step"] = 3
+                return render_template_string("""
+                    <style>body { background-color: black; color: white; }</style>
+                    <h1>Текст-квест: InSide</h1>
+                    <p>Уильям: Понимаю. Погодные условия :Р</p>
+                    <form method="post">
+                        <button name="choice" value="a_response">Ха-ха, очень смешно, гений.</button>
+                    </form>
+                """)
+            elif choice == "b":
+                state["step"] = 4
+                return render_template_string("""
+                    <style>body { background-color: black; color: white; }</style>
+                    <h1>Текст-квест: InSide</h1>
+                    <p>Уильям: Ты уже сообщала на работе, так?</p>
+                    <form method="post">
+                        <button name="choice" value="b_response">Не могу. Ты же знаешь. Министерство не... Ладно, забей.</button>
+                    </form>
+                """)
+
+        elif state["step"] == 3 and choice == "a_response":
+            state["step"] = 5
             return render_template_string("""
-                <h1>Текст-квест: Приключение начинается</h1>
-                <p>Вы очнулись в тёмном лесу. Перед вами два пути: идти направо или налево.</p>
+                <style>body { background-color: black; color: white; }</style>
+                <h1>Текст-квест: InSide</h1>
+                <p>Уильям: Ха-ха, рад, что ты в порядке! Давай болтать позже, береги себя.</p>
+                <p><a href="/">Начать заново</a></p>
+            """)
+
+        elif state["step"] == 4 and choice == "b_response":
+            state["step"] = 6
+            return render_template_string("""
+                <style>body { background-color: black; color: white; }</style>
+                <h1>Текст-квест: InSide</h1>
+                <p>Уильям: Чтобы в один прекрасный момент ты исчезла? Нет, спасибо.</p>
                 <form method="post">
-                    <button name="choice" value="right">Направо</button>
-                    <button name="choice" value="left">Налево</button>
+                    <button name="choice" value="b_response2">Ха-ха, очень смешно, гений.</button>
                 </form>
             """)
 
-        elif state["step"] == 2:
-            if choice == "right":
-                state["step"] = 3
-                return render_template_string("""
-                    <h1>Текст-квест</h1>
-                    <p>Вы нашли старый сундук! В нём меч. Взять меч?</p>
-                    <form method="post">
-                        <button name="choice" value="take">Взять меч</button>
-                        <button name="choice" value="leave">Оставить</button>
-                    </form>
-                """)
-            else:
-                state["step"] = 4
-                return render_template_string("""
-                    <h1>Текст-квест</h1>
-                    <p>Вы упали в яму. Игра окончена. <a href="/">Начать заново</a></p>
-                """)
+        elif state["step"] == 6 and choice == "b_response2":
+            return render_template_string("""
+                <style>body { background-color: black; color: white; }</style>
+                <h1>Текст-квест: InSide</h1>
+                <p>Уильям: Ладно, береги себя, Марго. Напишу позже.</p>
+                <p><a href="/">Начать заново</a></p>
+            """)
 
-        elif state["step"] == 3:
-            if choice == "take":
-                state["inventory"].append("меч")
-                state["step"] = 5
-                return render_template_string("""
-                    <h1>Текст-квест</h1>
-                    <p>Вы взяли меч. Теперь вы видите выход из леса. Уйти?</p>
-                    <form method="post">
-                        <button name="choice" value="exit">Уйти</button>
-                        <button name="choice" value="stay">Остаться</button>
-                    </form>
-                """)
-            else:
-                state["step"] = 5
-                return render_template_string("""
-                    <h1>Текст-квест</h1>
-                    <p>Вы оставили сундук. Выход из леса впереди. Уйти?</p>
-                    <form method="post">
-                        <button name="choice" value="exit">Уйти</button>
-                        <button name="choice" value="stay">Остаться</button>
-                    </form>
-                """)
-
-        elif state["step"] == 5:
-            if choice == "exit":
-                return render_template_string("""
-                    <h1>Текст-квест</h1>
-                    <p>Поздравляем! Вы выбрались из леса. Ваш инвентарь: {{ inventory }}. <a href="/">Начать заново</a></p>
-                """, inventory=", ".join(state["inventory"]))
-            else:
-                return render_template_string("""
-                    <h1>Текст-квест</h1>
-                    <p>Вы остались в лесу. Игра окончена. <a href="/">Начать заново</a></p>
-                """)
-
+    # Начальный экран с предысторией и выбором
     return render_template_string("""
-        <h1>Текст-квест</h1>
-        <p>Добро пожаловать! Нажмите кнопку, чтобы начать.</p>
+        <style>body { background-color: black; color: white; }</style>
+        <h1>Текст-квест: InSide</h1>
+        <p>хххх.хх.хх</p>
+        <p>Этот день нам запомнился надолго. До этого всё было не сказать, что так ужасно. Привычные дни жары, ничего не предвещающие новости... Уже тогда нас должно было насторожить изменение погоды. Ничего, в сущности, необычного. Только разве что бабочки исчезли. А вместе с ними и стрекозы. Не помню, когда в последний раз эти крылатые создания появлялись на глаза. Это был первый и очень явный знак, который мы все проигнорировали. Зря.</p>
+        <p>Трубили о том, что исчезли пчёлы. Ну, об этом уж говорили все и на каждом шагу. Все охали и ахали, сокрушаясь о гибели прелестных полосатых созданий, но дальше дело не пошло. Исчезли и исчезли - вечно, что ли, слёзы лить? Это было только начало. Мы должны были это понять.</p>
+        <p>После началась чехарда с погодой. Не просто то солнце, то дождь. Нет, торнадо могло возникнуть из ниоткуда, а буквально через секунду светило солнце или шёл дождь. Летом солнце испепеляло людей так сильно, что выход на улицу стал опасен. И даже тогда мы не перестали считать это обычными капризами погоды. Нам было дано последнее предупреждение.</p>
+        <p>Потом произошло ЭТО. Целый континент раскололся на две части. Нет смысла объяснять, какой урон это нанесло цивилизации. Новости, репортажи всё про это и всё ни о чём. Беда не обошла стороной никого. Следующее землетрясение уничтожило несколько стран. Вот тогда все всполошились. Но было уже поздно.</p>
+        <p>Мы попытались спастись. Как крысы с тонущего корабля, у которого всюду дыры и пробоины. Просто другого корабля у человечества не было. Тут-то мы осознали всю плачевность нашего положения. Когда невозможно выйти на улицу днём, когда воды не хватает, когда животные исчезают, а вместе с ними исчезаем и мы. Планета избавлялась от паразитов. Это ли не иронично?</p>
+        <p>Правительства были озабочены скорее собственным выживанием, но в том и был парадокс. Если спасутся только они, золотой миллиард, кто будет работать, кто будет их обслуживать? Тогда-то и началась суматоха номер два.</p>
+        <p>Довольно банально, даже я это понимаю, но правительство предложило выход. Проект назывался «InSide», и он защищал людей, но для реализации этой защиты нам было нужно выполнять несколько правил.</p>
+        <p style="color: red; text-decoration: blink;">ВНИМАНИЕ! INSIDE ПРЕДУПРЕЖДАЕТ!</p>
+        <ol>
+            <li>Не выходите на улицу после 00:00</li>
+            <li>Избегайте тёмных узких переулков.</li>
+            <li>Если с вами заговорит незнакомый человек с искаженными, неправильными чертами лица - бегите.</li>
+            <li>Если ваше животное избегает или боится определенного места - немедленно покиньте это место.</li>
+            <li>Не включайте ТВ и радио после 00:00.</li>
+            <li>Не смотрите в зеркало после 00:00.</li>
+            <li>Если вы слышите, как вас зовёт чей-то голос, но вы не знаете, откуда он доносится, игнорируйте его.</li>
+            <li>Если ваш друг/родственник ведёт себя странно, игнорируйте его.</li>
+            <li>Если хотя бы одно из этих правил будет нарушено, ваша жизнь окажется в опасности. Вы можете позвонить в Министерство Безопасности и сообщить о нарушении протокола «InSide».</li>
+            <li>Помните: ваша безопасность зависит только от вас!</li>
+        </ol>
+        <p>Сегодня вечером вам было тревожно. За окном шёл дождь, и вы не могли понять, кажется ли вам, что там кто-то ходит, или это ваше разыгравшееся воображение. Телефон завибрировал...</p>
         <form method="post">
-            <button name="choice" value="start">Начать</button>
+            <button name="choice" value="window">Выглянуть в окно</button>
+            <button name="choice" value="radio">Включить радио</button>
+            <button name="choice" value="message">Посмотреть сообщение</button>
         </form>
     """)
 
