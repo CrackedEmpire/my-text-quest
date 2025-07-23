@@ -2,19 +2,18 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Хранилище состояния квеста (упрощённое, для реального проекта используйте сессии)
+# Хранилище состояния квеста
 session_state = {}
 
-# Отладочный вывод для логов Render
+# Отладочный вывод для логов
 import os
 print(f"Server starting on PORT: {os.getenv('PORT', 'not set')}")
 
-# Начальная страница квеста
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
         choice = request.form.get('choice')
-        user_id = request.remote_addr  # Простой идентификатор (лучше использовать сессии)
+        user_id = request.remote_addr
 
         if user_id not in session_state:
             session_state[user_id] = {"step": 1, "inventory": []}
@@ -42,7 +41,7 @@ def home():
                         <button name="choice" value="leave">Оставить</button>
                     </form>
                 """)
-            else:  # left
+            else:
                 state["step"] = 4
                 return render_template_string("""
                     <h1>Текст-квест</h1>
