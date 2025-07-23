@@ -16,9 +16,8 @@ def home():
 
     state = {"step": session['step']}
 
-    # Отладка (должна отображаться в логах)
-    import os
-    print(f"User IP: {request.remote_addr}, Step: {state['step']}, Choice: {request.form.get('choice', 'None')}")  # Отладка
+    # Отладка
+    print(f"User IP: {request.remote_addr}, Step: {state['step']}, Choice: {request.form.get('choice', 'None')}")
 
     if request.method == 'POST':
         choice = request.form.get('choice')
