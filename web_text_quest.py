@@ -2,7 +2,7 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Хранилище состояния
+# Хранилище состояния с использованием сессий (упрощённая версия)
 session_state = {}
 
 # Отладочный вывод
@@ -44,7 +44,6 @@ def home():
         elif state["step"] == 2:
             if choice == "a":
                 state["step"] = 3
-                state["response"] = "a"
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
@@ -55,7 +54,6 @@ def home():
                 """)
             elif choice == "b":
                 state["step"] = 4
-                state["response"] = "b"
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
