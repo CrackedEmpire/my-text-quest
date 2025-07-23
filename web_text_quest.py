@@ -2,7 +2,7 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Хранилище состояния квеста (можно заменить на базу данных для persistence)
+# Хранилище состояния квеста (упрощённое, для реального проекта используйте сессии)
 session_state = {}
 
 # Отладочный вывод для логов Render
@@ -14,13 +14,13 @@ print(f"Server starting on PORT: {os.getenv('PORT', 'not set')}")
 def home():
     if request.method == 'POST':
         choice = request.form.get('choice')
-        user_id = request.remote_addr  # Простой идентификатор пользователя (можно улучшить)
-        
+        user_id = request.remote_addr  # Простой идентификатор (лучше использовать сессии)
+
         if user_id not in session_state:
             session_state[user_id] = {"step": 1, "inventory": []}
-        
+
         state = session_state[user_id]
-        
+
         if state["step"] == 1:
             return render_template_string("""
                 <h1>Текст-квест: Приключение начинается</h1>
@@ -30,7 +30,7 @@ def home():
                     <button name="choice" value="left">Налево</button>
                 </form>
             """)
-        
+
         elif state["step"] == 2:
             if choice == "right":
                 state["step"] = 3
@@ -48,7 +48,7 @@ def home():
                     <h1>Текст-квест</h1>
                     <p>Вы упали в яму. Игра окончена. <a href="/">Начать заново</a></p>
                 """)
-        
+
         elif state["step"] == 3:
             if choice == "take":
                 state["inventory"].append("меч")
@@ -71,7 +71,7 @@ def home():
                         <button name="choice" value="stay">Остаться</button>
                     </form>
                 """)
-        
+
         elif state["step"] == 5:
             if choice == "exit":
                 return render_template_string("""
@@ -83,7 +83,7 @@ def home():
                     <h1>Текст-квест</h1>
                     <p>Вы остались в лесу. Игра окончена. <a href="/">Начать заново</a></p>
                 """)
-    
+
     return render_template_string("""
         <h1>Текст-квест</h1>
         <p>Добро пожаловать! Нажмите кнопку, чтобы начать.</p>
