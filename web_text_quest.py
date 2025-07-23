@@ -8,6 +8,8 @@ session_state = {}
 @app.route('/', methods=['GET', 'POST'])
 def home():
     user_id = request.remote_addr
+    print(f"User {user_id}, Step: {session_state.get(user_id, {'step': 0})['step']}")  # Отладка
+
     if user_id not in session_state:
         session_state[user_id] = {"step": 1}
 
@@ -15,6 +17,7 @@ def home():
 
     if request.method == 'POST':
         choice = request.form.get('choice')
+        print(f"Choice: {choice}, Current Step: {state['step']}")  # Отладка
 
         if state["step"] == 1:
             if choice in ["window", "radio"]:
@@ -26,6 +29,7 @@ def home():
                 """)
             elif choice == "message":
                 state["step"] = 2
+                print(f"Updated to Step 2 for {user_id}")  # Отладка
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
