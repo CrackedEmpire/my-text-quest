@@ -2,23 +2,19 @@ from flask import Flask, request, render_template_string
 
 app = Flask(__name__)
 
-# Хранилище состояния с использованием сессий (упрощённая версия)
+# Хранилище состояния
 session_state = {}
-
-# Отладочный вывод
-import os
-print(f"Server starting on PORT: {os.getenv('PORT', 'not set')}")
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
+    user_id = request.remote_addr
+    if user_id not in session_state:
+        session_state[user_id] = {"step": 1}
+
+    state = session_state[user_id]
+
     if request.method == 'POST':
         choice = request.form.get('choice')
-        user_id = request.remote_addr
-
-        if user_id not in session_state:
-            session_state[user_id] = {"step": 1, "response": None}
-
-        state = session_state[user_id]
 
         if state["step"] == 1:
             if choice in ["window", "radio"]:
@@ -126,7 +122,5 @@ def home():
 
 if __name__ == "__main__":
     import os
-    port = int(os.getenv("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
     port = int(os.getenv("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
