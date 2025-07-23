@@ -1,23 +1,27 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, session
+from flask_session import Session
 
 app = Flask(__name__)
 
-# Хранилище состояния
-session_state = {}
+# Настройка сессий
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    user_id = request.remote_addr
-    print(f"User {user_id}, Step: {session_state.get(user_id, {'step': 0})['step']}")  # Отладка
+    # Инициализация сессии
+    if 'step' not in session:
+        session['step'] = 1
 
-    if user_id not in session_state:
-        session_state[user_id] = {"step": 1}
+    state = {"step": session['step']}
 
-    state = session_state[user_id]
+    # Отладка (должна отображаться в логах)
+    import os
+    print(f"User IP: {request.remote_addr}, Step: {state['step']}, Choice: {request.form.get('choice', 'None')}")  # Отладка
 
     if request.method == 'POST':
         choice = request.form.get('choice')
-        print(f"Choice: {choice}, Current Step: {state['step']}")  # Отладка
 
         if state["step"] == 1:
             if choice in ["window", "radio"]:
@@ -28,8 +32,7 @@ def home():
                     <p><a href="/">Начать заново</a></p>
                 """)
             elif choice == "message":
-                state["step"] = 2
-                print(f"Updated to Step 2 for {user_id}")  # Отладка
+                session['step'] = 2
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
@@ -43,7 +46,7 @@ def home():
 
         elif state["step"] == 2:
             if choice == "a":
-                state["step"] = 3
+                session['step'] = 3
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
@@ -53,7 +56,7 @@ def home():
                     </form>
                 """)
             elif choice == "b":
-                state["step"] = 4
+                session['step'] = 4
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
@@ -64,7 +67,7 @@ def home():
                 """)
 
         elif state["step"] == 3 and choice == "a_response":
-            state["step"] = 5
+            session['step'] = 5
             return render_template_string("""
                 <style>body { background-color: black; color: white; }</style>
                 <h1>Текст-квест: InSide</h1>
@@ -73,7 +76,7 @@ def home():
             """)
 
         elif state["step"] == 4 and choice == "b_response":
-            state["step"] = 6
+            session['step'] = 6
             return render_template_string("""
                 <style>body { background-color: black; color: white; }</style>
                 <h1>Текст-квест: InSide</h1>
