@@ -8,7 +8,8 @@ session_state = {}
 # Отладочный вывод для логов
 import os
 print(f"Server starting on PORT: {os.getenv('PORT', 'not set')}")
-
+import os
+print(f"PATH: {os.getenv('PATH')}")
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
