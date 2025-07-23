@@ -16,38 +16,35 @@ def home():
         user_id = request.remote_addr
 
         if user_id not in session_state:
-            session_state[user_id] = {"step": 1}
+            session_state[user_id] = {"step": 1, "response": None}
 
         state = session_state[user_id]
 
         if state["step"] == 1:
-            return render_template_string("""
-                <style>body { background-color: black; color: white; }</style>
-                <h1>Текст-квест: InSide</h1>
-                <p>Сегодня вечером вам было тревожно. За окном шёл дождь, и вы не могли понять, кажется ли вам, что там кто-то ходит, или это ваше разыгравшееся воображение. В любом случае, кажется, вы просто слишком устали после работы. Телефон под рукой завибрировал. Вы вздрогнули...</p>
-                <form method="post">
-                    <button name="choice" value="window">Выглянуть в окно</button>
-                    <button name="choice" value="radio">Включить радио</button>
-                    <button name="choice" value="message">Посмотреть сообщение</button>
-                </form>
-            """)
+            if choice in ["window", "radio"]:
+                return render_template_string("""
+                    <style>body { background-color: black; color: white; }</style>
+                    <h1>Текст-квест: InSide</h1>
+                    <p>Вы нарушили правила «InSide». Что-то зловещее поджидало вас... Игра окончена.</p>
+                    <p><a href="/">Начать заново</a></p>
+                """)
+            elif choice == "message":
+                state["step"] = 2
+                return render_template_string("""
+                    <style>body { background-color: black; color: white; }</style>
+                    <h1>Текст-квест: InSide</h1>
+                    <p>Вы посмотрели на загоревшийся экран телефона. Имя было вам знакомо — Уильям, ваш друг. Вы знали друг друга так давно, что, кажется, время и обстоятельства были не властны над вами.</p>
+                    <p>Уильям: Хэй, Марго... Как ты? В последнее время ты звучишь так измучено.</p>
+                    <form method="post">
+                        <button name="choice" value="a">А) Всё в порядке. Просто мигрени.</button>
+                        <button name="choice" value="b">Б) Я ощущаю, что за мной кто-то следит...</button>
+                    </form>
+                """)
 
-        elif state["step"] == 2 and choice == "message":
-            state["step"] = 3
-            return render_template_string("""
-                <style>body { background-color: black; color: white; }</style>
-                <h1>Текст-квест: InSide</h1>
-                <p>Вы посмотрели на загоревшийся экран телефона. Имя было вам знакомо — Уильям, ваш друг. Вы знали друг друга так давно, что, кажется, время и обстоятельства были не властны над вами.</p>
-                <p>Уильям: Хэй, Марго... Как ты? В последнее время ты звучишь так измучено.</p>
-                <form method="post">
-                    <button name="choice" value="a">А) Всё в порядке. Просто мигрени.</button>
-                    <button name="choice" value="b">Б) Я ощущаю, что за мной кто-то следит...</button>
-                </form>
-            """)
-
-        elif state["step"] == 3:
+        elif state["step"] == 2:
             if choice == "a":
-                state["step"] = 4
+                state["step"] = 3
+                state["response"] = "a"
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
@@ -57,7 +54,8 @@ def home():
                     </form>
                 """)
             elif choice == "b":
-                state["step"] = 5
+                state["step"] = 4
+                state["response"] = "b"
                 return render_template_string("""
                     <style>body { background-color: black; color: white; }</style>
                     <h1>Текст-квест: InSide</h1>
@@ -67,8 +65,8 @@ def home():
                     </form>
                 """)
 
-        elif state["step"] == 4 and choice == "a_response":
-            state["step"] = 6
+        elif state["step"] == 3 and choice == "a_response":
+            state["step"] = 5
             return render_template_string("""
                 <style>body { background-color: black; color: white; }</style>
                 <h1>Текст-квест: InSide</h1>
@@ -76,7 +74,7 @@ def home():
                 <p><a href="/">Начать заново</a></p>
             """)
 
-        elif state["step"] == 5 and choice == "b_response":
+        elif state["step"] == 4 and choice == "b_response":
             state["step"] = 6
             return render_template_string("""
                 <style>body { background-color: black; color: white; }</style>
@@ -95,16 +93,7 @@ def home():
                 <p><a href="/">Начать заново</a></p>
             """)
 
-        # Проигрышные варианты
-        elif choice in ["window", "radio"]:
-            return render_template_string("""
-                <style>body { background-color: black; color: white; }</style>
-                <h1>Текст-квест: InSide</h1>
-                <p>Вы нарушили правила «InSide». Что-то зловещее поджидало вас... Игра окончена.</p>
-                <p><a href="/">Начать заново</a></p>
-            """)
-
-    # Начальный экран с предысторией
+    # Начальный экран с предысторией и выбором
     return render_template_string("""
         <style>body { background-color: black; color: white; }</style>
         <h1>Текст-квест: InSide</h1>
@@ -129,9 +118,11 @@ def home():
             <li>Если хотя бы одно из этих правил будет нарушено, ваша жизнь окажется в опасности. Вы можете позвонить в Министерство Безопасности и сообщить о нарушении протокола «InSide».</li>
             <li>Помните: ваша безопасность зависит только от вас!</li>
         </ol>
-        <p>Нажмите, чтобы начать...</p>
+        <p>Сегодня вечером вам было тревожно. За окном шёл дождь, и вы не могли понять, кажется ли вам, что там кто-то ходит, или это ваше разыгравшееся воображение. Телефон завибрировал...</p>
         <form method="post">
-            <button name="choice" value="start">Начать</button>
+            <button name="choice" value="window">Выглянуть в окно</button>
+            <button name="choice" value="radio">Включить радио</button>
+            <button name="choice" value="message">Посмотреть сообщение</button>
         </form>
     """)
 
@@ -139,7 +130,5 @@ if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-if __name__ == "__main__":
-    import os
     port = int(os.getenv("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
